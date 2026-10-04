@@ -6,6 +6,7 @@ import 'package:qr_packing_app/models/box_model.dart';
 import 'package:qr_packing_app/models/item_model.dart';
 import 'package:qr_packing_app/screens/box/create_box_screen.dart';
 import 'package:qr_packing_app/screens/item/item_form_screen.dart';
+import 'package:qr_packing_app/screens/qr/box_qr_screen.dart';
 import 'package:qr_packing_app/services/auth_service.dart';
 import 'package:qr_packing_app/services/box_service.dart';
 import 'package:qr_packing_app/services/database_exception.dart';
@@ -315,6 +316,21 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
                         ),
                       ],
                     ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => BoxQrScreen(box: box)),
+                ),
+                icon: const Icon(Icons.qr_code_2),
+                label: const Text('Show QR Code'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
