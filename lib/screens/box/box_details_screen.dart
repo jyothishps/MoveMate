@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:qr_packing_app/core/constants/firestore_constants.dart';
 import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/models/box_model.dart';
+import 'package:qr_packing_app/models/item_model.dart';
 import 'package:qr_packing_app/screens/box/create_box_screen.dart';
+import 'package:qr_packing_app/screens/item/item_form_screen.dart';
+import 'package:qr_packing_app/services/auth_service.dart';
 import 'package:qr_packing_app/services/box_service.dart';
 import 'package:qr_packing_app/services/database_exception.dart';
+import 'package:qr_packing_app/services/item_service.dart';
 import 'package:qr_packing_app/widgets/empty_state.dart';
 import 'package:qr_packing_app/widgets/error_banner.dart';
+import 'package:qr_packing_app/widgets/item_tile.dart';
 import 'package:qr_packing_app/widgets/status_chip.dart';
 
 class BoxDetailsScreen extends StatefulWidget {
@@ -20,16 +26,24 @@ class BoxDetailsScreen extends StatefulWidget {
 
 class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
   final _boxService = BoxService();
+  final _itemService = ItemService();
   late final Stream<BoxModel?> _boxStream;
+  late final Stream<List<ItemModel>> _itemsStream;
   bool _isDeleting = false;
 
   @override
   void initState() {
     super.initState();
     _boxStream = _boxService.streamBox(widget.boxId);
+    _itemsStream = _itemService.streamBoxItems(
+      userId: AuthService().currentUser?.uid ?? '',
+      boxId: widget.boxId,
+    );
   }
 
-  Future<void> _confirmDelete(BoxModel box) async {
+  // ---------- Box actions ----------
+
+  Future<void> _confirmDeleteBox(BoxModel box) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -75,6 +89,124 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
       );
     }
   }
+
+  // ---------- Item actions ----------
+
+  void _openItemForm({ItemModel? item}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ItemFormScreen(boxId: widget.boxId, item: item),
+      ),
+    );
+  }
+
+  Future<void> _toggleItem(ItemModel item) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _itemService.setStatus(
+        item.id,
+        item.isPacked ? PackingStatus.unpacked : PackingStatus.packed,
+      );
+    } on DatabaseException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _confirmDeleteItem(ItemModel item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete item?'),
+        content: Text('"${item.itemName}" will be removed from this box.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _itemService.deleteItem(item.id);
+      messenger.showSnackBar(const SnackBar(content: Text('Item deleted')));
+    } on DatabaseException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  // ---------- Items list ----------
+
+  Widget _buildItems() {
+    return StreamBuilder<List<ItemModel>>(
+      stream: _itemsStream,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const ErrorBanner(
+            message: 'Could not load items. Check your connection.',
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final items = snapshot.data!;
+        if (items.isEmpty) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Icon(Icons.list_alt, color: AppColors.textSecondary),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'No items yet. Tap "Add item" to add the first one.',
+                      style: AppTextStyles.bodySecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (var i = 0; i < items.length; i++) ...[
+                if (i > 0) const Divider(height: 1),
+                ItemTile(
+                  item: items[i],
+                  onToggle: () => _toggleItem(items[i]),
+                  onEdit: () => _openItemForm(item: items[i]),
+                  onDelete: () => _confirmDeleteItem(items[i]),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ---------- Screen ----------
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +263,7 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
               IconButton(
                 tooltip: 'Delete box',
                 icon: const Icon(Icons.delete_outline),
-                onPressed: _isDeleting ? null : () => _confirmDelete(box),
+                onPressed: _isDeleting ? null : () => _confirmDeleteBox(box),
               ),
             ],
           ),
@@ -187,25 +319,19 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Items', style: AppTextStyles.subheading),
-              const SizedBox(height: 12),
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Icon(Icons.list_alt, color: AppColors.textSecondary),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Items inside this box will appear here (Phase 7).',
-                          style: AppTextStyles.bodySecondary,
-                        ),
-                      ),
-                    ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Items', style: AppTextStyles.subheading),
+                  TextButton.icon(
+                    onPressed: _isDeleting ? null : () => _openItemForm(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add item'),
                   ),
-                ),
+                ],
               ),
+              const SizedBox(height: 4),
+              _buildItems(),
               const SizedBox(height: 24),
               const Text('Box history', style: AppTextStyles.subheading),
               const SizedBox(height: 12),

@@ -68,6 +68,30 @@ class Validators {
     return null;
   }
 
+  static String? itemName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter an item name';
+    }
+    if (value.trim().length > 50) {
+      return 'Item name must be 50 characters or less';
+    }
+    return null;
+  }
+
+  static String? quantity(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter a quantity';
+    }
+    final number = int.tryParse(value.trim());
+    if (number == null) {
+      return 'Quantity must be a whole number';
+    }
+    if (number < 1 || number > 999) {
+      return 'Quantity must be between 1 and 999';
+    }
+    return null;
+  }
+
   // Returns a validator that compares the text with the password field.
   static String? Function(String?) confirmPassword(
       TextEditingController passwordController,
