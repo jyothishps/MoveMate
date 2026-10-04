@@ -41,6 +41,33 @@ class Validators {
     return null;
   }
 
+  static String? boxName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter a box name';
+    }
+    if (value.trim().length > 50) {
+      return 'Box name must be 50 characters or less';
+    }
+    return null;
+  }
+
+  static String? location(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter a location';
+    }
+    if (value.trim().length > 50) {
+      return 'Location must be 50 characters or less';
+    }
+    return null;
+  }
+
+  static String? description(String? value) {
+    if (value != null && value.trim().length > 200) {
+      return 'Description must be 200 characters or less';
+    }
+    return null;
+  }
+
   // Returns a validator that compares the text with the password field.
   static String? Function(String?) confirmPassword(
       TextEditingController passwordController,

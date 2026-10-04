@@ -1,20 +1,103 @@
 import 'package:flutter/material.dart';
 import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/constants/app_routes.dart';
-import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
+import 'package:qr_packing_app/models/box_model.dart';
+import 'package:qr_packing_app/models/item_model.dart';
+import 'package:qr_packing_app/screens/box/box_details_screen.dart';
 import 'package:qr_packing_app/services/auth_service.dart';
+import 'package:qr_packing_app/services/box_service.dart';
+import 'package:qr_packing_app/services/item_service.dart';
+import 'package:qr_packing_app/widgets/box_card.dart';
+import 'package:qr_packing_app/widgets/empty_state.dart';
+import 'package:qr_packing_app/widgets/error_banner.dart';
 import 'package:qr_packing_app/widgets/primary_button.dart';
-import 'package:qr_packing_app/widgets/status_chip.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  late final Stream<List<BoxModel>> _boxesStream;
+  late final Stream<List<ItemModel>> _itemsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    // Only this user's data is requested.
+    final userId = AuthService().currentUser?.uid ?? '';
+    _boxesStream = BoxService().streamUserBoxes(userId);
+    _itemsStream = ItemService().streamUserItems(userId);
+  }
+
+  Widget _buildBoxList() {
+    return StreamBuilder<List<BoxModel>>(
+      stream: _boxesStream,
+      builder: (context, boxSnapshot) {
+        if (boxSnapshot.hasError) {
+          return const ErrorBanner(
+            message: 'Could not load your boxes. Check your connection.',
+          );
+        }
+
+        if (!boxSnapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final boxes = boxSnapshot.data!;
+        if (boxes.isEmpty) {
+          return const EmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'No boxes yet',
+            message: 'Tap "Create Box" to add your first box.',
+          );
+        }
+
+        return StreamBuilder<List<ItemModel>>(
+          stream: _itemsStream,
+          builder: (context, itemSnapshot) {
+            // Count how many items each box contains.
+            final counts = <String, int>{};
+            for (final item in itemSnapshot.data ?? <ItemModel>[]) {
+              counts[item.boxId] = (counts[item.boxId] ?? 0) + 1;
+            }
+
+            return Column(
+              children: [
+                for (final box in boxes)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: BoxCard(
+                      box: box,
+                      itemCount: counts[box.id] ?? 0,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BoxDetailsScreen(boxId: box.id),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final displayName = AuthService().currentUser?.displayName?.trim() ?? '';
     final firstName = displayName.split(' ').first;
     final welcomeText = firstName.isEmpty ? 'Welcome!' : 'Welcome, $firstName!';
+
     return Scaffold(
       appBar: AppBar(title: const Text(AppConstants.appName)),
       body: ListView(
@@ -35,63 +118,8 @@ class HomeTab extends StatelessWidget {
           const SizedBox(height: 28),
           const Text('Your Boxes', style: AppTextStyles.subheading),
           const SizedBox(height: 12),
-          // Demo card. Real boxes from the database come in Phase 6.
-          _SampleBoxCard(
-            onTap: () => Navigator.pushNamed(context, AppRoutes.boxDetails),
-          ),
+          _buildBoxList(),
         ],
-      ),
-    );
-  }
-}
-
-class _SampleBoxCard extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _SampleBoxCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                height: 48,
-                width: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.inventory_2_outlined,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('BOX B001', style: AppTextStyles.subheading),
-                    SizedBox(height: 2),
-                    Text(
-                      'Kitchen • Storage Room',
-                      style: AppTextStyles.bodySecondary,
-                    ),
-                    SizedBox(height: 4),
-                    Text('12 Items', style: AppTextStyles.caption),
-                  ],
-                ),
-              ),
-              const StatusChip(label: 'Packed', isPacked: true),
-            ],
-          ),
-        ),
       ),
     );
   }
