@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:qr_packing_app/core/constants/firestore_constants.dart';
 
 /// A simple error that carries a message safe to show to the user.
 class AuthException implements Exception {
@@ -29,8 +32,12 @@ class AuthService {
         email: email.trim(),
         password: password,
       );
-      await credential.user?.updateDisplayName(name.trim());
-      await credential.user?.reload();
+      final user = credential.user;
+      if (user != null) {
+        await user.updateDisplayName(name.trim());
+        await user.reload();
+        await _saveUserProfile(user.uid, name.trim(), email.trim());
+      }
     } on FirebaseAuthException catch (e) {
       throw AuthException(_messageFor(e.code));
     }
@@ -52,6 +59,23 @@ class AuthService {
 
   Future<void> logout() async {
     await _auth.signOut();
+  }
+
+  /// Saves users/{uid} in Firestore. The app does not depend on this
+  /// document, so a failure here must not block registration.
+  Future<void> _saveUserProfile(String uid, String name, String email) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection(FirestoreConstants.usersCollection)
+          .doc(uid)
+          .set({
+        'name': name,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Could not save user profile: $e');
+    }
   }
 
   /// Turns Firebase's technical error codes into friendly messages.
