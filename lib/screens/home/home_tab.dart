@@ -3,6 +3,7 @@ import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/constants/app_routes.dart';
 import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
+import 'package:qr_packing_app/services/auth_service.dart';
 import 'package:qr_packing_app/widgets/primary_button.dart';
 import 'package:qr_packing_app/widgets/status_chip.dart';
 
@@ -11,12 +12,15 @@ class HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName = AuthService().currentUser?.displayName?.trim() ?? '';
+    final firstName = displayName.split(' ').first;
+    final welcomeText = firstName.isEmpty ? 'Welcome!' : 'Welcome, $firstName!';
     return Scaffold(
       appBar: AppBar(title: const Text(AppConstants.appName)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('Welcome!', style: AppTextStyles.heading),
+          Text(welcomeText, style: AppTextStyles.heading),
           const SizedBox(height: 4),
           const Text(
             'Manage your boxes and find your things fast.',

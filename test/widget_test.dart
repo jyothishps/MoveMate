@@ -1,16 +1,21 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:qr_packing_app/core/constants/app_constants.dart';
-import 'package:qr_packing_app/main.dart';
+import 'package:qr_packing_app/core/theme/app_theme.dart';
+import 'package:qr_packing_app/screens/auth/login_screen.dart';
 
 void main() {
-  testWidgets('App starts on the splash screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const QrPackingApp());
+  testWidgets('Login shows validation errors for empty fields',
+          (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(theme: AppTheme.light, home: const LoginScreen()),
+        );
 
-    // The splash screen shows the app name.
-    expect(find.text(AppConstants.appName), findsOneWidget);
+        expect(find.text('Welcome back'), findsOneWidget);
 
-    // Let the 2-second splash timer finish and the page change.
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
-  });
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
+        await tester.pump();
+
+        expect(find.text('Please enter your email'), findsOneWidget);
+        expect(find.text('Please enter your password'), findsOneWidget);
+      });
 }

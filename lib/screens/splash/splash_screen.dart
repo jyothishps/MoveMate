@@ -3,6 +3,7 @@ import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/constants/app_routes.dart';
 import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
+import 'package:qr_packing_app/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,12 +16,21 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Wait 2 seconds, then go to Login.
-    // In Phase 4 this will check whether the user is already logged in.
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    });
+    _goToNextScreen();
+  }
+
+  Future<void> _goToNextScreen() async {
+    // Show the splash screen for 2 seconds.
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Ask Firebase if a user is already logged in on this phone.
+    final user = await AuthService().authStateChanges.first;
+
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(
+      context,
+      user == null ? AppRoutes.login : AppRoutes.home,
+    );
   }
 
   @override
