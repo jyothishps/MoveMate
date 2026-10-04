@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "912147915455",
+    "project_id": "movemate-15d75",
+    "storage_bucket": "movemate-15d75.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912147915455:android:23305944f8c38577431c0a",
+        "android_client_info": {
+          "package_name": "com.mcaproject.qr_packing_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDp_yiEHsOGZsvs4fVkUDP2kcpdkTgbFRs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
