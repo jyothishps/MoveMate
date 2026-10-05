@@ -234,7 +234,8 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
         }
 
         final box = snapshot.data;
-        if (box == null) {
+        // Never show a box that belongs to another account.
+        if (box == null || box.userId != AuthService().currentUser?.uid) {
           return Scaffold(
             appBar: AppBar(title: const Text('Box Details')),
             body: const EmptyState(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_packing_app/core/constants/firestore_constants.dart';
 import 'package:qr_packing_app/models/box_model.dart';
@@ -26,6 +28,31 @@ class BoxService {
     return _boxes.doc(boxId).snapshots().map(
           (doc) => doc.exists ? BoxModel.fromDoc(doc) : null,
     );
+  }
+
+  /// Finds one box by ID, but only if it belongs to [userId].
+  /// Returns null if it does not exist, was deleted, or is not yours.
+  Future<BoxModel?> getUserBox(String boxId, String userId) async {
+    try {
+      final snapshot = await _boxes
+          .where('userId', isEqualTo: userId)
+          .where(FieldPath.documentId, isEqualTo: boxId)
+          .limit(1)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 15));
+
+      if (snapshot.docs.isEmpty) return null;
+      return BoxModel.fromDoc(snapshot.docs.first);
+    } on TimeoutException {
+      throw DatabaseException(
+        'Cannot reach the server. Check your internet connection.',
+      );
+    } on FirebaseException catch (e) {
+      // Once strict rules are added, someone else's box is "permission denied".
+      // We show that exactly like "not found".
+      if (e.code == 'permission-denied') return null;
+      throw DatabaseException.fromFirebase(e);
+    }
   }
 
   /// Saves a new box and returns its generated ID.
