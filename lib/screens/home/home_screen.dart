@@ -14,22 +14,28 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _tabs = const [
-    HomeTab(),
-    SearchScreen(),
-    ScanQrScreen(),
-    ProfileScreen(),
-  ];
+  void _goToTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Tab order: 0 Home, 1 Search, 2 Scan, 3 Profile.
+    final tabs = <Widget>[
+      HomeTab(
+        onSearchTap: () => _goToTab(1),
+        onScanTap: () => _goToTab(2),
+      ),
+      const SearchScreen(),
+      const ScanQrScreen(),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
-      body: _tabs[_currentIndex],
+      body: tabs[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
-        },
+        onDestinationSelected: _goToTab,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

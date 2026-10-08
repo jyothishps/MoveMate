@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qr_packing_app/core/constants/firestore_constants.dart';
 import 'package:qr_packing_app/models/box_model.dart';
 import 'package:qr_packing_app/services/database_exception.dart';
@@ -52,6 +53,18 @@ class BoxService {
       // We show that exactly like "not found".
       if (e.code == 'permission-denied') return null;
       throw DatabaseException.fromFirebase(e);
+    }
+  }
+
+  /// Remembers when a box was scanned (used by the dashboard).
+  /// A failure here must never stop the user from opening the box.
+  Future<void> markScanned(String boxId) async {
+    try {
+      await _boxes.doc(boxId).update({
+        'lastScannedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('Could not save scan time: $e');
     }
   }
 

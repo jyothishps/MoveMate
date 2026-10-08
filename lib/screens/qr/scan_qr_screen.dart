@@ -100,6 +100,9 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
         return;
       }
 
+      // Remember when this box was scanned (used by the dashboard).
+      _boxService.markScanned(box.id);
+
       // 4. Open the box, then ignore the same code for a few seconds.
       await Navigator.push(
         context,

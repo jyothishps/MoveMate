@@ -11,6 +11,7 @@ class BoxModel {
   final String status;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? lastScannedAt;
 
   const BoxModel({
     required this.id,
@@ -22,6 +23,7 @@ class BoxModel {
     required this.status,
     this.createdAt,
     this.updatedAt,
+    this.lastScannedAt,
   });
 
   bool get isPacked => status == PackingStatus.packed;
@@ -46,6 +48,7 @@ class BoxModel {
       status: data['status'] as String? ?? PackingStatus.unpacked,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      lastScannedAt: (data['lastScannedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -63,7 +66,8 @@ class BoxModel {
     };
   }
 
-  /// Fields saved when a box is edited (userId and createdAt never change).
+  /// Fields saved when a box is edited (userId, createdAt and
+  /// lastScannedAt are never changed by an edit).
   Map<String, dynamic> toUpdateMap() {
     return {
       'boxName': boxName,
