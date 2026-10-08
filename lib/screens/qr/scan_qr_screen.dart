@@ -1,6 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/core/utils/qr_parser.dart';
 import 'package:qr_packing_app/screens/box/box_details_screen.dart';
 import 'package:qr_packing_app/services/auth_service.dart';
@@ -142,11 +142,22 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
                 if (!state.isRunning) return const SizedBox.shrink();
                 return Stack(
                   children: [
-                    const Center(child: _ScanFrame()),
+                    // Dimmed camera mask outside scan reticle
+                    const Positioned.fill(
+                      child: CustomPaint(
+                        painter: _VignetteCutoutPainter(
+                          cutoutSize: 260,
+                          borderRadius: 20,
+                        ),
+                      ),
+                    ),
+                    // High-tech corner bracket reticle with animated laser
+                    const Center(child: _ScanReticle()),
+                    // Floating frosted glass instruction card
                     Positioned(
                       left: 20,
                       right: 20,
-                      bottom: 20,
+                      bottom: 30,
                       child: _StatusCard(isProcessing: _isProcessing),
                     ),
                   ],
@@ -160,20 +171,163 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
   }
 }
 
-class _ScanFrame extends StatelessWidget {
-  const _ScanFrame();
+class _ScanReticle extends StatefulWidget {
+  const _ScanReticle();
+
+  @override
+  State<_ScanReticle> createState() => _ScanReticleState();
+}
+
+class _ScanReticleState extends State<_ScanReticle>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      height: 250,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.white, width: 3),
-        borderRadius: BorderRadius.circular(20),
+    const boxSize = 260.0;
+
+    return SizedBox(
+      width: boxSize,
+      height: boxSize,
+      child: Stack(
+        children: [
+          // Corner brackets
+          CustomPaint(
+            size: const Size(boxSize, boxSize),
+            painter: _CornerBracketPainter(),
+          ),
+          // Animated sweeping laser line
+          AnimatedBuilder(
+            animation: _animController,
+            builder: (context, _) {
+              final topOffset = _animController.value * (boxSize - 16) + 8;
+              return Positioned(
+                top: topOffset,
+                left: 12,
+                right: 12,
+                child: Container(
+                  height: 3,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Color(0xFF38BDF8),
+                        Colors.white,
+                        Color(0xFF38BDF8),
+                        Colors.transparent,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF38BDF8).withValues(alpha: 0.8),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
+}
+
+class _CornerBracketPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF38BDF8)
+      ..strokeWidth = 4.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    const cornerLength = 28.0;
+    const radius = 16.0;
+
+    // Top-Left
+    final pathTL = Path()
+      ..moveTo(0, cornerLength)
+      ..lineTo(0, radius)
+      ..arcToPoint(const Offset(radius, 0), radius: const Radius.circular(radius))
+      ..lineTo(cornerLength, 0);
+    canvas.drawPath(pathTL, paint);
+
+    // Top-Right
+    final pathTR = Path()
+      ..moveTo(size.width - cornerLength, 0)
+      ..lineTo(size.width - radius, 0)
+      ..arcToPoint(Offset(size.width, radius), radius: const Radius.circular(radius))
+      ..lineTo(size.width, cornerLength);
+    canvas.drawPath(pathTR, paint);
+
+    // Bottom-Left
+    final pathBL = Path()
+      ..moveTo(0, size.height - cornerLength)
+      ..lineTo(0, size.height - radius)
+      ..arcToPoint(Offset(radius, size.height), radius: const Radius.circular(radius))
+      ..lineTo(cornerLength, size.height);
+    canvas.drawPath(pathBL, paint);
+
+    // Bottom-Right
+    final pathBR = Path()
+      ..moveTo(size.width - cornerLength, size.height)
+      ..lineTo(size.width - radius, size.height)
+      ..arcToPoint(Offset(size.width, size.height - radius), radius: const Radius.circular(radius))
+      ..lineTo(size.width, size.height - cornerLength);
+    canvas.drawPath(pathBR, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _VignetteCutoutPainter extends CustomPainter {
+  final double cutoutSize;
+  final double borderRadius;
+
+  const _VignetteCutoutPainter({
+    required this.cutoutSize,
+    required this.borderRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.black.withValues(alpha: 0.55);
+
+    final bgPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final rect = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height / 2),
+      width: cutoutSize,
+      height: cutoutSize,
+    );
+    final cutoutPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(borderRadius)));
+
+    final finalPath = Path.combine(PathOperation.difference, bgPath, cutoutPath);
+    canvas.drawPath(finalPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _StatusCard extends StatelessWidget {
@@ -183,28 +337,69 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            if (isProcessing) ...[
-              const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.5),
-              ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Text(
-                isProcessing
-                    ? 'Looking up box...'
-                    : 'Point the camera at a MoveMate box QR code',
-                style: AppTextStyles.body,
-              ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
             ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              if (isProcessing) ...[
+                const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Color(0xFF38BDF8),
+                  ),
+                ),
+                const SizedBox(width: 14),
+              ] else ...[
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Color(0xFF38BDF8),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Text(
+                  isProcessing
+                      ? 'Looking up box...'
+                      : 'Point camera at a MoveMate box QR code',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

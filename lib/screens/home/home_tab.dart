@@ -48,11 +48,10 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
-    // Only this user's data is requested.
     final userId = AuthService().currentUser?.uid ?? '';
 
     _boxesSubscription = BoxService().streamUserBoxes(userId).listen(
-          (boxes) {
+      (boxes) {
         if (mounted) setState(() => _boxes = boxes);
       },
       onError: (_) {
@@ -61,7 +60,7 @@ class _HomeTabState extends State<HomeTab> {
     );
 
     _itemsSubscription = ItemService().streamUserItems(userId).listen(
-          (items) {
+      (items) {
         if (mounted) setState(() => _items = items);
       },
       onError: (_) {
@@ -102,7 +101,6 @@ class _HomeTabState extends State<HomeTab> {
 
     final stats = DashboardStats.from(boxes: boxes, items: items);
 
-    // How many items each box holds (shown on the box cards).
     final counts = <String, int>{};
     for (final item in items) {
       counts[item.boxId] = (counts[item.boxId] ?? 0) + 1;
@@ -111,31 +109,64 @@ class _HomeTabState extends State<HomeTab> {
     final displayName = AuthService().currentUser?.displayName?.trim() ?? '';
     final firstName = displayName.split(' ').first;
     final welcomeText = firstName.isEmpty ? 'Welcome!' : 'Welcome, $firstName!';
-
-    final actionStyle = OutlinedButton.styleFrom(
-      minimumSize: const Size(0, 52),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    );
+    final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : 'M';
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       children: [
-        Text(welcomeText, style: AppTextStyles.heading),
-        const SizedBox(height: 4),
-        const Text(
-          'Manage your boxes and find your things fast.',
-          style: AppTextStyles.bodySecondary,
+        // Header with Avatar Initials
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(welcomeText, style: AppTextStyles.display.copyWith(fontSize: 26)),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'Manage your boxes and find your things fast.',
+                    style: AppTextStyles.bodySecondary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  width: 1.5,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
 
-        // Statistics
+        // Statistics Cards
         Row(
           children: [
             Expanded(
               child: StatCard(
                 icon: Icons.inventory_2_outlined,
                 value: stats.totalBoxes,
-                label: 'Boxes',
+                label: 'Total Boxes',
                 color: AppColors.primary,
                 backgroundColor: AppColors.primaryLight,
               ),
@@ -145,9 +176,9 @@ class _HomeTabState extends State<HomeTab> {
               child: StatCard(
                 icon: Icons.list_alt,
                 value: stats.totalItems,
-                label: 'Items',
-                color: AppColors.primary,
-                backgroundColor: AppColors.primaryLight,
+                label: 'Total Items',
+                color: AppColors.catBedroom,
+                backgroundColor: AppColors.catBedroomLight,
               ),
             ),
           ],
@@ -176,7 +207,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
 
         // Quick actions
         PrimaryButton(
@@ -188,20 +219,18 @@ class _HomeTabState extends State<HomeTab> {
         Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
+              child: _SecondaryActionButton(
+                label: 'Scan QR',
+                icon: Icons.qr_code_scanner,
                 onPressed: widget.onScanTap,
-                icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Scan QR'),
-                style: actionStyle,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: OutlinedButton.icon(
+              child: _SecondaryActionButton(
+                label: 'Search Item',
+                icon: Icons.search,
                 onPressed: widget.onSearchTap,
-                icon: const Icon(Icons.search),
-                label: const Text('Search Item'),
-                style: actionStyle,
               ),
             ),
           ],
@@ -212,14 +241,42 @@ class _HomeTabState extends State<HomeTab> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Recently added', style: AppTextStyles.subheading),
+            Row(
+              children: [
+                const Text('Recently added', style: AppTextStyles.subheading),
+                if (boxes.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceSubtle,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${boxes.length}',
+                      style: AppTextStyles.badge.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
             if (boxes.isNotEmpty)
               TextButton(
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const AllBoxesScreen()),
                 ),
-                child: const Text('See all'),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('See all'),
+                    SizedBox(width: 2),
+                    Icon(Icons.chevron_right, size: 18),
+                  ],
+                ),
               ),
           ],
         ),
@@ -248,7 +305,7 @@ class _HomeTabState extends State<HomeTab> {
         if (stats.recentlyScanned.isEmpty)
           const _EmptyHint(
             message:
-            'No boxes scanned yet. Scan a box QR code and it will show up here.',
+                'No boxes scanned yet. Scan a box QR code and it will show up here.',
           )
         else
           for (final box in stats.recentlyScanned)
@@ -256,6 +313,7 @@ class _HomeTabState extends State<HomeTab> {
               padding: const EdgeInsets.only(bottom: 12),
               child: _RecentScanTile(box: box, onTap: () => _openBox(box.id)),
             ),
+        const SizedBox(height: 24),
       ],
     );
   }
@@ -263,8 +321,64 @@ class _HomeTabState extends State<HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appName)),
+      appBar: AppBar(
+        title: Text(
+          AppConstants.appName,
+          style: AppTextStyles.heading.copyWith(fontSize: 22),
+        ),
+      ),
       body: _buildBody(),
+    );
+  }
+}
+
+class _SecondaryActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _SecondaryActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            height: 52,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: AppTextStyles.button.copyWith(
+                    color: AppColors.primary,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -278,31 +392,51 @@ class _RecentScanTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scannedAt = box.lastScannedAt;
+    final catColor = AppColors.categoryColor(box.category);
+    final catBg = AppColors.categoryLightColor(box.category);
+    final catIcon = AppConstants.categoryIcon(box.category);
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(
-          height: 40,
-          width: 40,
+          height: 42,
+          width: 42,
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: catBg,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: catColor.withValues(alpha: 0.15),
+              width: 1,
+            ),
           ),
-          child: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
+          child: Icon(catIcon, color: catColor, size: 20),
         ),
         title: Text(
           box.boxName,
-          style: AppTextStyles.body,
+          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           'BOX ${box.shortCode} • ${scannedAt == null ? '' : timeAgo(scannedAt)}',
-          style: AppTextStyles.bodySecondary,
+          style: AppTextStyles.bodySecondary.copyWith(fontSize: 12),
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: const Icon(Icons.chevron_right, color: AppColors.textMuted),
       ),
     );
   }
@@ -315,10 +449,16 @@ class _EmptyHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text(message, style: AppTextStyles.bodySecondary),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Text(
+        message,
+        style: AppTextStyles.bodySecondary.copyWith(height: 1.4),
       ),
     );
   }

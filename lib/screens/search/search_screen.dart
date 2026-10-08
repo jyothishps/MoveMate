@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/core/utils/search_helper.dart';
 import 'package:qr_packing_app/models/box_model.dart';
@@ -120,9 +121,25 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       children: [
         if (results.items.isNotEmpty) ...[
-          Text(
-            'Items (${results.items.length})',
-            style: AppTextStyles.subheading,
+          Row(
+            children: [
+              const Text('Items', style: AppTextStyles.subheading),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${results.items.length}',
+                  style: AppTextStyles.badge.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           for (final result in results.items)
@@ -137,9 +154,25 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 12),
         ],
         if (results.boxes.isNotEmpty) ...[
-          Text(
-            'Boxes (${results.boxes.length})',
-            style: AppTextStyles.subheading,
+          Row(
+            children: [
+              const Text('Boxes', style: AppTextStyles.subheading),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${results.boxes.length}',
+                  style: AppTextStyles.badge.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           for (final box in results.boxes)
@@ -163,23 +196,42 @@ class _SearchScreenState extends State<SearchScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => setState(() => _query = value),
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Search items, boxes, categories...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isEmpty
-                    ? null
-                    : IconButton(
-                  tooltip: 'Clear',
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _query = '');
-                  },
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _query = value),
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Search items, boxes, categories...',
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: AppColors.primary,
+                  ),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear',
+                          icon: const Icon(
+                            Icons.close,
+                            color: AppColors.textSecondary,
+                            size: 18,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                        ),
                 ),
               ),
             ),

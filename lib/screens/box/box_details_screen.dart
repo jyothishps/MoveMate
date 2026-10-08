@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/constants/firestore_constants.dart';
 import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
@@ -168,31 +169,59 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
 
         final items = snapshot.data!;
         if (items.isEmpty) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Icon(Icons.list_alt, color: AppColors.textSecondary),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'No items yet. Tap "Add item" to add the first one.',
-                      style: AppTextStyles.bodySecondary,
-                    ),
+          return Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.borderLight),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
+                  child: const Icon(Icons.list_alt, color: AppColors.primary),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Text(
+                    'No items yet. Tap "Add item" to add the first one.',
+                    style: AppTextStyles.bodySecondary,
+                  ),
+                ),
+              ],
             ),
           );
         }
 
-        return Card(
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.borderLight),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
               for (var i = 0; i < items.length; i++) ...[
-                if (i > 0) const Divider(height: 1),
+                if (i > 0)
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: AppColors.borderLight,
+                  ),
                 ItemTile(
                   item: items[i],
                   onToggle: () => _toggleItem(items[i]),
@@ -270,108 +299,286 @@ class _BoxDetailsScreenState extends State<BoxDetailsScreen> {
             ],
           ),
           body: ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Hero Info Card with Category Accent
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.borderLight),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Room Accent Bar
+                    Container(
+                      height: 5,
+                      width: double.infinity,
+                      color: AppColors.categoryColor(box.category),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'BOX ${box.shortCode}',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceSubtle,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'BOX ${box.shortCode}',
+                                  style: AppTextStyles.shortCode.copyWith(
+                                    color: AppColors.primary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              StatusChip(
+                                label: box.isPacked ? 'Packed' : 'Unpacked',
+                                isPacked: box.isPacked,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(box.boxName, style: AppTextStyles.heading),
+                          const SizedBox(height: 16),
+                          // Horizontal Category & Location Badges
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.categoryLightColor(box.category),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: AppColors.categoryColor(box.category)
+                                        .withValues(alpha: 0.18),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      AppConstants.categoryIcon(box.category),
+                                      size: 16,
+                                      color: AppColors.categoryColor(box.category),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      box.category,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.categoryColor(box.category),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceSubtle,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.place_outlined,
+                                      size: 16,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      box.location,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (box.description.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceSubtle,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    Icons.notes_outlined,
+                                    size: 16,
+                                    color: AppColors.textMuted,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      box.description,
+                                      style: AppTextStyles.bodySecondary.copyWith(
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          StatusChip(
-                            label: box.isPacked ? 'Packed' : 'Unpacked',
-                            isPacked: box.isPacked,
-                          ),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(box.boxName, style: AppTextStyles.heading),
-                      const SizedBox(height: 16),
-                      _InfoRow(
-                        icon: Icons.category_outlined,
-                        label: 'Category',
-                        value: box.category,
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        icon: Icons.place_outlined,
-                        label: 'Location',
-                        value: box.location,
-                      ),
-                      if (box.description.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          icon: Icons.notes_outlined,
-                          label: 'Description',
-                          value: box.description,
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => BoxQrScreen(box: box)),
+
+              // Interactive QR Code Banner Action
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderLight),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                icon: const Icon(Icons.qr_code_2),
-                label: const Text('Show QR Code'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => BoxQrScreen(box: box)),
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        children: [
+                          Container(
+                            height: 44,
+                            width: 44,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.qr_code_2,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show Box QR Code',
+                                  style: AppTextStyles.subheading.copyWith(
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'View or save printable moving label',
+                                  style: AppTextStyles.caption,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: AppColors.textMuted,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
+
+              // Items Section Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Items', style: AppTextStyles.subheading),
                   TextButton.icon(
                     onPressed: _isDeleting ? null : () => _openItemForm(),
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add item'),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               _buildItems(),
               const SizedBox(height: 24),
+
+              // Box History
               const Text('Box history', style: AppTextStyles.subheading),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      _InfoRow(
-                        icon: Icons.add_circle_outline,
-                        label: 'Created',
-                        value: _formatDate(box.createdAt),
-                      ),
-                      const SizedBox(height: 12),
-                      _InfoRow(
-                        icon: Icons.update,
-                        label: 'Last updated',
-                        value: _formatDate(box.updatedAt),
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  children: [
+                    _InfoRow(
+                      icon: Icons.add_circle_outline,
+                      label: 'Created',
+                      value: _formatDate(box.createdAt),
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      icon: Icons.update,
+                      label: 'Last updated',
+                      value: _formatDate(box.updatedAt),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_packing_app/core/constants/firestore_constants.dart';
+import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/core/utils/validators.dart';
 import 'package:qr_packing_app/models/item_model.dart';
@@ -145,6 +146,14 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 const Text('Packing status', style: AppTextStyles.bodySecondary),
                 const SizedBox(height: 8),
                 SegmentedButton<String>(
+                  style: SegmentedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    selectedBackgroundColor: AppColors.primaryLight,
+                    selectedForegroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.border),
+                  ),
                   segments: const [
                     ButtonSegment(
                       value: PackingStatus.unpacked,

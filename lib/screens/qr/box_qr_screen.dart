@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/models/box_model.dart';
@@ -72,76 +73,167 @@ class _BoxQrScreenState extends State<BoxQrScreen> {
   @override
   Widget build(BuildContext context) {
     final box = widget.box;
+    final catColor = AppColors.categoryColor(box.category);
+    final catIcon = AppConstants.categoryIcon(box.category);
 
     return Scaffold(
       appBar: AppBar(title: const Text('QR Code')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           children: [
             // The label: this is also what gets saved as the picture.
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: RepaintBoundary(
-                key: _labelKey,
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Text(
-                        box.boxName,
-                        style: AppTextStyles.heading,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'BOX ${box.shortCode}',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: RepaintBoundary(
+                  key: _labelKey,
+                  child: Container(
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        // Industrial Category Header Bar
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          color: catColor,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(catIcon, color: Colors.white, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    box.category.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 14,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                box.location.toUpperCase(),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Semantics(
-                        image: true,
-                        label: 'QR code for box ${box.boxName}',
-                        child: QrImageView(
-                          data: box.qrData,
-                          version: QrVersions.auto,
-                          size: 220,
-                          backgroundColor: Colors.white,
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              Text(
+                                box.boxName,
+                                style: AppTextStyles.heading.copyWith(
+                                  fontSize: 22,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceSubtle,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'BOX ${box.shortCode}',
+                                  style: AppTextStyles.shortCode.copyWith(
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AppColors.border,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Semantics(
+                                  image: true,
+                                  label: 'QR code for box ${box.boxName}',
+                                  child: QrImageView(
+                                    data: box.qrData,
+                                    version: QrVersions.auto,
+                                    size: 200,
+                                    backgroundColor: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              const Text(
+                                'MOVEMATE SMART PACKING LABEL',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  letterSpacing: 1.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              SelectableText(
+                                box.id,
+                                style: AppTextStyles.caption.copyWith(
+                                  fontFamily: 'monospace',
+                                  fontSize: 10,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Box ID', style: AppTextStyles.caption),
-                      const SizedBox(height: 2),
-                      SelectableText(
-                        box.id,
-                        style: AppTextStyles.bodySecondary,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             const Text(
-              'This code holds only the box ID. No names or items are stored inside it.',
+              'This label can be printed or attached to your packing box.',
               style: AppTextStyles.caption,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             PrimaryButton(
               label: 'Save to Gallery',
-              icon: Icons.download,
+              icon: Icons.download_rounded,
               isLoading: _isSaving,
               onPressed: _saveToGallery,
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
-}
+}

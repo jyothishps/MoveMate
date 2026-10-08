@@ -24,7 +24,7 @@ class ProfileScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text(
               'Log out',
-              style: TextStyle(color: AppColors.error),
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -38,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
     Navigator.pushNamedAndRemoveUntil(
       context,
       AppRoutes.login,
-          (route) => false,
+      (route) => false,
     );
   }
 
@@ -47,45 +47,107 @@ class ProfileScreen extends StatelessWidget {
     final user = AuthService().currentUser;
     final name = (user?.displayName ?? '').trim();
     final email = user?.email ?? '';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'M';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         children: [
-          const SizedBox(height: 12),
-          const Center(
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: AppColors.primaryLight,
-              child: Icon(Icons.person, size: 44, color: AppColors.primary),
+          // Profile User Card
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.borderLight),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              name.isEmpty ? 'MoveMate user' : name,
-              style: AppTextStyles.subheading,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      width: 2,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      initial,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  name.isEmpty ? 'MoveMate user' : name,
+                  style: AppTextStyles.heading.copyWith(fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  email,
+                  style: AppTextStyles.bodySecondary,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: Text(email, style: AppTextStyles.bodySecondary),
           ),
           const SizedBox(height: 32),
+
+          // Logout Action
           PrimaryButton(
             label: 'Logout',
             icon: Icons.logout,
             onPressed: () => _confirmLogout(context),
           ),
-          const SizedBox(height: 32),
-          const Center(
-            child: Text(
-              '${AppConstants.appName} • QR-Based Smart Packing\nand Inventory Management',
-              style: AppTextStyles.caption,
-              textAlign: TextAlign.center,
+          const SizedBox(height: 36),
+
+          // App Branding Footer
+          Center(
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/app_icon.png',
+                    width: 44,
+                    height: 44,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  '${AppConstants.appName} • Smart Packing & Moving',
+                  style: AppTextStyles.caption,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Version 1.0.0',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );

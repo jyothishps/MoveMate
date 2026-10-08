@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_packing_app/core/constants/app_routes.dart';
+import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/core/utils/validators.dart';
 import 'package:qr_packing_app/services/auth_service.dart';
@@ -79,11 +80,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Create account', style: AppTextStyles.heading),
+                Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.18),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/app_icon.png',
+                        width: 64,
+                        height: 64,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Create account',
+                  style: AppTextStyles.heading,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 8),
                 const Text(
                   'Sign up to start organizing your boxes',
                   style: AppTextStyles.bodySecondary,
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
                 AppTextField(

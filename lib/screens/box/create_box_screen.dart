@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/constants/firestore_constants.dart';
+import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
 import 'package:qr_packing_app/core/utils/validators.dart';
 import 'package:qr_packing_app/models/box_model.dart';
@@ -147,11 +148,32 @@ class _CreateBoxScreenState extends State<CreateBoxScreen> {
                   ),
                   items: [
                     for (final c in categories)
-                      DropdownMenuItem(value: c, child: Text(c)),
+                      DropdownMenuItem(
+                        value: c,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: AppColors.categoryLightColor(c),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                AppConstants.categoryIcon(c),
+                                size: 16,
+                                color: AppColors.categoryColor(c),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(c, style: AppTextStyles.body),
+                          ],
+                        ),
+                      ),
                   ],
                   onChanged: (value) => setState(() => _category = value),
                   validator: (value) =>
-                  value == null ? 'Please choose a category' : null,
+                      value == null ? 'Please choose a category' : null,
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
@@ -172,6 +194,14 @@ class _CreateBoxScreenState extends State<CreateBoxScreen> {
                 const Text('Packing status', style: AppTextStyles.bodySecondary),
                 const SizedBox(height: 8),
                 SegmentedButton<String>(
+                  style: SegmentedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    selectedBackgroundColor: AppColors.primaryLight,
+                    selectedForegroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.border),
+                  ),
                   segments: const [
                     ButtonSegment(
                       value: PackingStatus.unpacked,
