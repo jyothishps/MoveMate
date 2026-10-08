@@ -35,11 +35,14 @@ class _AppTextFieldState extends State<AppTextField> {
       obscureText: widget.isPassword && _hidden,
       maxLines: widget.isPassword ? 1 : widget.maxLines,
       validator: widget.validator,
+      // Tapping anywhere outside the field closes the keyboard.
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       decoration: InputDecoration(
         labelText: widget.label,
         prefixIcon: widget.icon != null ? Icon(widget.icon) : null,
         suffixIcon: widget.isPassword
             ? IconButton(
+          tooltip: _hidden ? 'Show password' : 'Hide password',
           icon: Icon(
             _hidden
                 ? Icons.visibility_off_outlined

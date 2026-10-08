@@ -16,9 +16,13 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
+    // minHeight (not a fixed height) lets the button grow when the user
+    // has chosen a larger font size in the phone settings.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: double.infinity,
+        minHeight: 52,
+      ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         child: isLoading
@@ -37,7 +41,9 @@ class PrimaryButton extends StatelessWidget {
               Icon(icon, size: 20),
               const SizedBox(width: 8),
             ],
-            Text(label),
+            Flexible(
+              child: Text(label, textAlign: TextAlign.center),
+            ),
           ],
         ),
       ),

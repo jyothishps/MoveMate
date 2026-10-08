@@ -19,26 +19,32 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(12),
+    // A screen reader says "12 Boxes" as one phrase instead of
+    // reading the icon, the number and the label separately.
+    return Semantics(
+      label: '$value $label',
+      excludeSemantics: true,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: 12),
-            Text('$value', style: AppTextStyles.heading),
-            const SizedBox(height: 2),
-            Text(label, style: AppTextStyles.bodySecondary),
-          ],
+              const SizedBox(height: 12),
+              Text('$value', style: AppTextStyles.heading),
+              const SizedBox(height: 2),
+              Text(label, style: AppTextStyles.bodySecondary),
+            ],
+          ),
         ),
       ),
     );

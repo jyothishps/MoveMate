@@ -103,11 +103,15 @@ class _BoxQrScreenState extends State<BoxQrScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      QrImageView(
-                        data: box.qrData,
-                        version: QrVersions.auto,
-                        size: 220,
-                        backgroundColor: Colors.white,
+                      Semantics(
+                        image: true,
+                        label: 'QR code for box ${box.boxName}',
+                        child: QrImageView(
+                          data: box.qrData,
+                          version: QrVersions.auto,
+                          size: 220,
+                          backgroundColor: Colors.white,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       const Text('Box ID', style: AppTextStyles.caption),

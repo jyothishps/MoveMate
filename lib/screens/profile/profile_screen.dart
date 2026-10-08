@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_packing_app/core/constants/app_constants.dart';
 import 'package:qr_packing_app/core/constants/app_routes.dart';
 import 'package:qr_packing_app/core/theme/app_colors.dart';
 import 'package:qr_packing_app/core/theme/app_text_styles.dart';
@@ -8,7 +9,30 @@ import 'package:qr_packing_app/widgets/primary_button.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  Future<void> _logout(BuildContext context) async {
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('You will need to log in again to see your boxes.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text(
+              'Log out',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
     await AuthService().logout();
     if (!context.mounted) return;
     Navigator.pushNamedAndRemoveUntil(
@@ -52,7 +76,15 @@ class ProfileScreen extends StatelessWidget {
           PrimaryButton(
             label: 'Logout',
             icon: Icons.logout,
-            onPressed: () => _logout(context),
+            onPressed: () => _confirmLogout(context),
+          ),
+          const SizedBox(height: 32),
+          const Center(
+            child: Text(
+              '${AppConstants.appName} • QR-Based Smart Packing\nand Inventory Management',
+              style: AppTextStyles.caption,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
