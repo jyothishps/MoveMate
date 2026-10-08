@@ -92,7 +92,7 @@ class AuthService {
       case 'email-already-in-use':
         return 'An account already exists with this email.';
       case 'weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
+        return 'Password is too weak. Please choose a stronger one.';
       case 'network-request-failed':
         return 'No internet connection. Please check your network.';
       case 'too-many-requests':
